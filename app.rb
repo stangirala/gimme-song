@@ -1,22 +1,25 @@
 require "sinatra"
 require 'koala'
-
+require 'json'
+require 'youtube_search'
+require 'net/http'
+require 'uri'
 enable :sessions
 set :raise_errors, false
-set :show_exceptions, false
+set :show_exceptions, false 
+configure :development do
+ENV["FACEBOOK_APP_ID"]="391867550875701"
+ENV["FACEBOOK_SECRET"]="ba24216257756039c68ad2f050c63f0d"
+end 
 
-# Scope defines what permissions that we are asking the user to grant.
-# In this example, we are asking for the ability to publish stories
-# about using the app, access to what the user likes, and to be able
-# to use their pictures.  You should rewrite this scope with whatever
-# permissions your app needs.
-# See https://developers.facebook.com/docs/reference/api/permissions/
-# for a full list of permissions
-FACEBOOK_SCOPE = 'user_likes,user_photos,user_photo_video_tags'
+FACEBOOK_SCOPE = 'user_likes,user_photos,user_photo_video_tags,user_interests'
 
 unless ENV["FACEBOOK_APP_ID"] && ENV["FACEBOOK_SECRET"]
   abort("missing env vars: please set FACEBOOK_APP_ID and FACEBOOK_SECRET with your app credentials")
 end
+
+
+interest_graph=Array.new
 
 before do
   # HTTPS redirect
@@ -43,7 +46,7 @@ helpers do
   end
 
   def authenticator
-    @authenticator ||= Koala::Facebook::OAuth.new(ENV["FACEBOOK_APP_ID"], ENV["FACEBOOK_SECRET"], url("/auth/facebook/callback"))
+   @authenticator ||= Koala::Facebook::OAuth.new(ENV["FACEBOOK_APP_ID"], ENV["FACEBOOK_SECRET"], url("/auth/facebook/callback"))
   end
 
 end
@@ -60,16 +63,20 @@ get "/" do
 
   # Get public details of current application
   @app  =  @graph.get_object(ENV["FACEBOOK_APP_ID"])
-
+  #user_interest_graph=Array.new
   if session[:access_token]
     @user    = @graph.get_object("me")
     @friends = @graph.get_connections('me', 'friends')
     @photos  = @graph.get_connections('me', 'photos')
     @likes   = @graph.get_connections('me', 'likes').first(4)
-
-    # for other data you can always run fql
+    @music   = @graph.get_connections('me', 'music')
     @friends_using_app = @graph.fql_query("SELECT uid, name, is_app_user, pic_square FROM user WHERE uid in (SELECT uid2 FROM friend WHERE uid1 = me()) AND is_app_user = 1")
+     user_interest_graph = @music.each { |music| music['name'] }
+    
+   File.open('user_graph/'+"#{@user['name']}.json","w") do |f|
+   f.write(user_interest_graph.to_json)
   end
+ end
   erb :index
 end
 
@@ -97,3 +104,49 @@ get '/auth/facebook/callback' do
 	session[:access_token] = authenticator.get_access_token(params[:code])
 	redirect '/'
 end
+
+get '/upload' do
+
+erb :upload 
+
+end 
+get '/music/discover/:user' do 
+  current_user=params[:user]
+  #sentiment=compute_sentiment("http://192.168.1.1")
+  interest_graph_json=File.read("user_graph/#{current_user}.json")
+  interest_graph=JSON.parse(interest_graph_json)
+  discovery_array=interest_graph.map{ |interest|  interest['name'] }
+  #sentiment_array=sentiment.map{|key,value| song['value'] }
+  #discovery_array=discovery_array+sentiment_array
+  @youtube = discovery_array[0..15].map do |search_term|
+               YoutubeSearch.search(search_term).first['video_id'] 
+    
+   end
+def compute_sentiment(api_uri)
+uri=URI.parse(api_uri)
+http=Net::HTTP.new(uri.host,uri.port)
+request=Net::HTTP::Get.new(uri.request_uri)
+response=http.request(request)
+
+json_response= response.body
+
+return JSON.parse(json_response)
+
+end 
+
+  
+  erb :video  
+
+end 
+
+
+post '/upload' do
+File.open('music/' + 'song_buffer.mp3' ,"w") do |f|
+f.write(params['myfile'][:tempfile].read)
+end
+
+redirect '/music/discover'
+
+end
+
+

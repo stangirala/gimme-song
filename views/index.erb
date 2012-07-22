@@ -22,7 +22,7 @@
     <meta property="og:url" content="<%= url %>" />
     <meta property="og:image" content="<%= url('/logo.png') %>" />
     <meta property="og:site_name" content="<%= @app['name'] %>" />
-    <meta property="og:description" content="My First App" />
+    <meta property="og:description" content="Gimme song" />
     <meta property="fb:app_id" content="<%= @app['name'] %>" />
 
     <script type="text/javascript" src="/javascripts/jquery-1.7.1.min.js"></script>
@@ -179,13 +179,13 @@
           <h1>Examples of the Facebook Graph API</h1>
 
           <div class="list">
-            <h3>A few of your friends</h3>
+            <h3>Music that interests you</h3>
             <ul class="friends">
-              <% @friends.each do |friend| %>
+              <% @music.each do |music| %>
                 <li>
-                  <a href="#" onclick="window.open('http://www.facebook.com/<%= friend['id']%>')">
-                    <img src="https://graph.facebook.com/<%= friend['id'] %>/picture?type=square" alt="<%= friend['name'] %>">
-                    <%= friend['name'] %>
+                  <a href="#" onclick="window.open('http://www.facebook.com/<%= music['id']%>')">
+                    <img src="https://graph.facebook.com/<%= music['id'] %>/picture?type=square" alt="<%= music['name'] %>">
+                    <%= music['name'] %>
                   </a>
                 </li>
               <% end %>

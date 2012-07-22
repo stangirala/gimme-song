@@ -1,11 +1,15 @@
 import subprocess
 import json
 from pprint import pprint
+<<<<<<< HEAD
 from HTMLParser import HTMLParser
 
 def parseHTML(lyrics):
 
 	
+=======
+
+>>>>>>> 4c8988e641dbf4048ae4b6479ad63d2650042ac3
 
 def curlTextProcessing(text):
 
@@ -21,6 +25,7 @@ def curlTextProcessing(text):
 
 	return [data["probability"]["pos"], data["probability"]["neg"], data["probability"]["neutral"]]
 
+<<<<<<< HEAD
 
 if __name__ == '__main__':
 	text = "Hey Jude, don't make it bad."
@@ -29,3 +34,12 @@ if __name__ == '__main__':
 	l = curlTextProcessing(text)
 
 	print l
+=======
+#if __name__ == '__main__':
+#	text = "Hey Jude, don't make it bad."
+
+#	l = []
+#	l = curlTextProcessing(text)
+
+#	print l
+>>>>>>> 4c8988e641dbf4048ae4b6479ad63d2650042ac3
